@@ -9,19 +9,29 @@ namespace FundApps.PlutoRover
 {
     public class Rover
     {
-        public Planisfere Planisfere { get; private set; }
+        #region Propertie(s)
+
+        private readonly Planisphere _planisfere;
 
         public Coordinate Coordinate { get; private set; }
 
         public Orientation Orientation { get; private set; }
 
-        public Rover(Planisfere planisfere, Position position)
+        #endregion
+
+        public Rover(Planisphere planisfere, Position position)
         {
-            Planisfere = planisfere;
+            _planisfere = planisfere;
             Coordinate = position.Coordinate;
             Orientation = position.Orientation;
         }
 
+        /// <summary>
+        /// Moves the rover according to the instructions
+        /// </summary>
+        /// <param name="instruction"></param>
+        /// <param name="instructions"></param>
+        /// <returns></returns>
         public Position Move(char instruction, params char[] instructions)
         {
             var complete = new List<char> { instruction };
@@ -50,6 +60,53 @@ namespace FundApps.PlutoRover
             }
 
             return position;
+        }
+
+        internal Position MoveOne(char instruction)
+        {
+            var newCoordinate = Coordinate;
+            var newOrientation = Orientation;
+
+            switch (instruction)
+            {
+                case 'L':
+                case 'l':
+                {
+                    newOrientation = Rotate(-1);
+                    break;
+                }
+                case 'R':
+                case 'r':
+                {
+                    newOrientation = Rotate(1);
+                    break;
+                }
+                case 'F':
+                case 'f':
+                {
+                    newCoordinate = Step(1);
+                    CheckNextStep(newCoordinate);
+                    break;
+                }
+                case 'B':
+                case 'b':
+                {
+                    newCoordinate = Step(-1);
+                    CheckNextStep(newCoordinate);
+                    break;
+                }
+            }
+
+            Coordinate = newCoordinate;
+            Orientation = newOrientation;
+
+            return new Position { Coordinate = Coordinate, Orientation = Orientation };
+        }
+
+        internal void CheckNextStep(Coordinate newCoordinate)
+        {
+            //todo: implement obstacle detection logic (sensor's result?)
+            //Exception type to create and throw
         }
 
         internal Orientation Rotate(int direction)
@@ -106,60 +163,17 @@ namespace FundApps.PlutoRover
             moveFunc.Invoke(result);
 
             //ensuring coordinates ar e not out of the map
-            if (result.Y > (Planisfere.Height - 1))
-                result.Y -= (Planisfere.Height);
+            if (result.Y > (_planisfere.Height - 1))
+                result.Y -= (_planisfere.Height);
             else if (result.Y < 0)
-                result.Y += Planisfere.Height;
+                result.Y += _planisfere.Height;
 
-            if (result.X > (Planisfere.Width - 1))
-                result.X -= (Planisfere.Width);
+            if (result.X > (_planisfere.Width - 1))
+                result.X -= (_planisfere.Width);
             else if (result.X < 0)
-                result.X += Planisfere.Width;
+                result.X += _planisfere.Width;
 
             return result;
-        }
-
-        internal Position MoveOne(char instruction)
-        {
-            var newCoordinate = Coordinate;
-            var newOrientation = Orientation;
-
-            switch (instruction)
-            {
-                case 'L':
-                {
-                    newOrientation = Rotate(-1);
-                    break;
-                }
-                case 'R':
-                {
-                    newOrientation = Rotate(1);
-                    break;
-                }
-                case 'F':
-                {
-                    newCoordinate = Step(1);
-                    CheckNextStep(newCoordinate);
-                    break;
-                }
-                case 'B':
-                {
-                    newCoordinate = Step(-1);
-                    CheckNextStep(newCoordinate);
-                    break;
-                }
-            }
-
-            Coordinate = newCoordinate;
-            Orientation = newOrientation;
-
-            return new Position {Coordinate = Coordinate, Orientation = Orientation};
-        }
-
-        internal void CheckNextStep(Coordinate newCoordinate)
-        {
-            //todo: implement obstacle detection logic (sensor's result?)
-            //Exception type to create and throw
         }
     }
 }

@@ -6,9 +6,9 @@ namespace FundApps.PlutoRoverTest
     [TestClass]
     public class RoverTest
     {
-        private Planisfere Planisfere
+        private Planisphere Planisfere
         {
-            get { return new Planisfere(100, 100); }
+            get { return new Planisphere(100, 100); }
         }
 
         [TestMethod]
