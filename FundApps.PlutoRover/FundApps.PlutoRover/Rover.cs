@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("FundApps.PlutoRoverTest")]
@@ -13,12 +15,41 @@ namespace FundApps.PlutoRover
 
         public Orientation Orientation { get; private set; }
 
-
         public Rover(Planisfere planisfere, Position position)
         {
             Planisfere = planisfere;
             Coordinate = position.Coordinate;
             Orientation = position.Orientation;
+        }
+
+        public Position Move(char instruction, params char[] instructions)
+        {
+            var complete = new List<char> { instruction };
+            if (instructions.Any())
+            {
+                complete.AddRange(instructions);
+            }
+            //iterate complete to ensure all instructions are known
+            return Move(complete);
+        }
+
+        private Position Move(IEnumerable<char> instructions)
+        {
+            var position = new Position { Coordinate = Coordinate, Orientation = Orientation };
+
+            foreach (var instruction in instructions)
+            {
+                try
+                {
+                    position = MoveOne(instruction);
+                }
+                catch
+                {
+                    break;
+                }
+            }
+
+            return position;
         }
 
         internal Orientation Rotate(int direction)
@@ -36,7 +67,7 @@ namespace FundApps.PlutoRover
             return (Orientation) rotation;
         }
 
-        internal Coordinate Step()
+        internal Coordinate Step(int direction)
         {
             var result = new Coordinate {X = Coordinate.X, Y = Coordinate.Y};
 
@@ -46,25 +77,25 @@ namespace FundApps.PlutoRover
             {
                 case Orientation.North:
                 {
-                    delta = 1;
+                    delta = 1 * direction;
                     moveFunc = coordinate => { coordinate.Y += delta; };
                     break;
                 }
                 case Orientation.South:
                 {
-                    delta = -1;
+                    delta = -1 * direction;
                     moveFunc = coordinate => { coordinate.Y += delta; };
                     break;
                 }
                 case Orientation.East:
                 {
-                    delta = 1;
+                    delta = 1 * direction;
                     moveFunc = coordinate => { coordinate.X += delta; };
                     break;
                 }
                 case Orientation.West:
                 {
-                    delta = -1;
+                    delta = -1 * direction;
                     moveFunc = coordinate => { coordinate.X += delta; };
                     break;
                 }
@@ -86,6 +117,49 @@ namespace FundApps.PlutoRover
                 result.X += Planisfere.Width;
 
             return result;
+        }
+
+        internal Position MoveOne(char instruction)
+        {
+            var newCoordinate = Coordinate;
+            var newOrientation = Orientation;
+
+            switch (instruction)
+            {
+                case 'L':
+                {
+                    newOrientation = Rotate(-1);
+                    break;
+                }
+                case 'R':
+                {
+                    newOrientation = Rotate(1);
+                    break;
+                }
+                case 'F':
+                {
+                    newCoordinate = Step(1);
+                    CheckNextStep(newCoordinate);
+                    break;
+                }
+                case 'B':
+                {
+                    newCoordinate = Step(-1);
+                    CheckNextStep(newCoordinate);
+                    break;
+                }
+            }
+
+            Coordinate = newCoordinate;
+            Orientation = newOrientation;
+
+            return new Position {Coordinate = Coordinate, Orientation = Orientation};
+        }
+
+        internal void CheckNextStep(Coordinate newCoordinate)
+        {
+            //todo: implement obstacle detection logic (sensor's result?)
+            //Exception type to create and throw
         }
     }
 }
